@@ -4,7 +4,7 @@ import * as kl from "kolorist";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
-import { install, publish, remove, runScript } from "./commands";
+import { install, publish, remove, runDlx, runScript } from "./commands";
 import { JsrPackage, JsrPackageNameError, prettyTime, setDebug } from "./utils";
 import { PkgManagerName } from "./pkg_manager";
 
@@ -44,6 +44,7 @@ ${
       ["i, install, add", "Install one or more JSR packages."],
       ["r, uninstall, remove", "Remove one or more JSR packages."],
       ["publish", "Publish a package to the JSR registry."],
+      ["dlx <package>", "Run a script from the JSR registry."]
     ])
   }
 
@@ -214,7 +215,13 @@ if (args.length === 0) {
       run(async () => {
         await runScript(process.cwd(), script, { pkgManagerName });
       });
-    } else {
+    } else if (cmd === "dlx") {
+      run(async () => {
+        const packageName = options.positionals[1];
+        const jsrPackage = JsrPackage.from(packageName)
+        await runDlx(jsrPackage, { pkgManagerName })
+      })
+    }else {
       const packageJsonPath = path.join(process.cwd(), "package.json");
       if (fs.existsSync(packageJsonPath)) {
         const packageJson = JSON.parse(

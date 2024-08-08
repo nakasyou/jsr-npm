@@ -8,8 +8,9 @@ import { downloadDeno, getDenoDownloadUrl } from "./download";
 
 const NPMRC_FILE = ".npmrc";
 const BUNFIG_FILE = "bunfig.toml";
-const JSR_NPMRC = `@jsr:registry=https://npm.jsr.io\n`;
-const JSR_BUNFIG = `[install.scopes]\n"@jsr" = "https://npm.jsr.io/"\n`;
+const JSR_NPMURL = 'https://npm.jsr.io'
+const JSR_NPMRC = `@jsr:registry=${JSR_NPMURL}\n`;
+const JSR_BUNFIG = `[install.scopes]\n"@jsr" = "${JSR_NPMURL}"\n`;
 
 async function wrapWithStatus(msg: string, fn: () => Promise<void>) {
   process.stdout.write(msg + "...");
@@ -153,4 +154,10 @@ export async function runScript(
 ) {
   const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName);
   await pkgManager.runScript(script);
+}
+
+export async function runDlx (jsrPackage: JsrPackage, options: BaseOptions) {
+  const pkgManager = await getPkgManager(process.cwd(), options.pkgManagerName)
+
+  await pkgManager.dlx(jsrPackage.toNpmPackage(), JSR_NPMURL)
 }

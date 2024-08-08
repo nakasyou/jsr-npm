@@ -3,9 +3,9 @@ import { InstallOptions } from "./commands";
 import { exec, findProjectDir, JsrPackage } from "./utils";
 import * as kl from "kolorist";
 
-async function execWithLog(cmd: string, args: string[], cwd: string) {
+async function execWithLog(cmd: string, args: string[], cwd: string, env?: Record<string, string>) {
   console.log(kl.dim(`$ ${cmd} ${args.join(" ")}`));
-  return exec(cmd, args, cwd);
+  return exec(cmd, args, cwd, env);
 }
 
 function modeToFlag(mode: InstallOptions["mode"]): string {
@@ -27,6 +27,7 @@ export interface PackageManager {
   install(packages: JsrPackage[], options: InstallOptions): Promise<void>;
   remove(packages: JsrPackage[]): Promise<void>;
   runScript(script: string): Promise<void>;
+  dlx(packageName: string, npmRegistry: string): Promise<void>;
 }
 
 class Npm implements PackageManager {
@@ -54,6 +55,10 @@ class Npm implements PackageManager {
   async runScript(script: string) {
     await execWithLog("npm", ["run", script], this.cwd);
   }
+  
+  async dlx(packageName: string, npmRegistry: string): Promise<void> {
+    await execWithLog("npx", [packageName], this.cwd, {npm_config_registry: npmRegistry})
+  }
 }
 
 class Yarn implements PackageManager {
@@ -79,6 +84,10 @@ class Yarn implements PackageManager {
 
   async runScript(script: string) {
     await execWithLog("yarn", [script], this.cwd);
+  }
+
+  async dlx(packageName: string, npmRegistry: string): Promise<void> {
+    await execWithLog("yarn", ["dlx", packageName], this.cwd, {npm_config_registry: npmRegistry})
   }
 }
 
@@ -106,6 +115,10 @@ class Pnpm implements PackageManager {
   async runScript(script: string) {
     await execWithLog("pnpm", [script], this.cwd);
   }
+
+  async dlx(packageName: string, npmRegistry: string): Promise<void> {
+    await execWithLog("pnpm", ["dlx", packageName], this.cwd, {npm_config_registry: npmRegistry})
+  }
 }
 
 export class Bun implements PackageManager {
@@ -131,6 +144,10 @@ export class Bun implements PackageManager {
 
   async runScript(script: string) {
     await execWithLog("bun", ["run", script], this.cwd);
+  }
+
+  async dlx(packageName: string, npmRegistry: string): Promise<void> {
+    await execWithLog("bunx", [packageName], this.cwd, {npm_config_registry: npmRegistry})
   }
 }
 
